@@ -22,3 +22,5 @@ jobs:
    - run: docker push  shahdfares/multi-server 
    - run: docker push  shahdfares/multi-worker 
    - run: docker push  shahdfares/multi-nginx 
+
+# Artifact configurations   
