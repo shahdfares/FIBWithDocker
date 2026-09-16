@@ -1,15 +1,15 @@
-name: FIB project
+name: Docker react project 
 on:
  push:
   branch:
-   - master 
+   - master
 
 jobs:
  build:
-  runs-on: ubuntu
+  runs-on: ubuntu-latest
   steps:
-   - uses: action/checkout@v2
-   - run: docker login -u ${{secrets.DOCKER_USERNAME}} -P ${{secrets.DOCKER_PASSWORD}}
+   - uses: actions/checkout@v2
+   - run: docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{ secrets.DOCKER_PASSWORD}}
    - run: docker build -t shahdfares/clientTest ./client
    - run: docker run -e CI=true shahdfares/clientTest npm run test
 
