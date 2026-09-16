@@ -13,3 +13,12 @@ jobs:
    - run: docker build -t shahdfares/clientTest ./client
    - run: docker run -e CI=true shahdfares/clientTest npm run test
 
+   - run: docker build -t shahdfares/multi-client ./client
+   - run: docker build -t shahdfares/multi-server ./server
+   - run: docker build -t shahdfares/multi-worker ./worker
+   - run: docker build -t shahdfares/multi-nginx ./nginx
+
+   - run: docker push  shahdfares/multi-client 
+   - run: docker push  shahdfares/multi-server 
+   - run: docker push  shahdfares/multi-worker 
+   - run: docker push  shahdfares/multi-nginx 
