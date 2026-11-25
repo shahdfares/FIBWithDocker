@@ -14,9 +14,9 @@ jobs:
    # - run: docker run -e CI=true shahdfares/clienttest npm run test
 
    - run: docker build -t shahdfares/multi-client -f ./client/Dockerfile ./client
-   - run: docker build -t shahdfares/multi-server -f ./server
-   - run: docker build -t shahdfares/multi-worker -f worker
-   - run: docker build -t shahdfares/multi-nginx -f nginx
+   - run: docker build -t shahdfares/multi-server -f ./serverDockerfile ./server
+   - run: docker build -t shahdfares/multi-worker -f worker/Dockerfile ./worker
+   - run: docker build -t shahdfares/multi-nginx -f nginx/Dockerfile ./nginx
 
    - run: docker push  shahdfares/multi-client 
    - run: docker push  shahdfares/multi-server 
