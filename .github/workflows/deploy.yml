@@ -31,7 +31,7 @@ jobs:
 
 # Creating a deployment
    - name: Azure-login
-     uses: angular/login@v2
+     uses: azure/login@v2
      with:
         client-id: ${{secrets.AZURE_CLIENT_ID}}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -48,7 +48,7 @@ jobs:
             kubectl create secret generic pgpassword \
             --from-literal=PGPASSWORD='${{ secrets.PGPASSWORD }}' \
             --dry-run=client -o yaml | kubectl apply -f -
-            
+
    - name: Apply k8s files
      run: kubectl apply -f k8s/
 
