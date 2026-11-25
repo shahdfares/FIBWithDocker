@@ -3,9 +3,17 @@ on:
  push:
   branches:
    - feature
+  
+permissions:  
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP: FIB_RG
+  CLUSTER_NAME: fib-aks  
 
 jobs:
- build:
+ build-and-deploy:
   runs-on: ubuntu-latest
   steps:
    - uses: actions/checkout@v2
@@ -13,29 +21,45 @@ jobs:
    # - run: docker build -t shahdfares/clienttest ./client -f ./client/Dockerfile.dev
    # - run: docker run -e CI=true shahdfares/clienttest npm run test
 
-   - run: docker build -t shahdfares/multi-client -f ./client/Dockerfile ./client
-   - run: docker build -t shahdfares/multi-server -f ./server/Dockerfile ./server
-   - run: docker build -t shahdfares/multi-worker -f worker/Dockerfile ./worker
-   - run: docker build -t shahdfares/multi-nginx -f nginx/Dockerfile ./nginx
+   - run:  docker build -t shahdfares/multi-client:latest -t shahdfares/multi-client:${{ github.sha }} -f ./client/Dockerfile ./client
+   - run:  docker build -t shahdfares/multi-server:latest -t shahdfares/multi-server:${{ github.sha }} -f ./server/Dockerfile ./server
+   - run:  docker build -t shahdfares/multi-worker:latest -t shahdfares/multi-worker:${{ github.sha }} -f ./worker/Dockerfile ./worker
 
    - run: docker push  shahdfares/multi-client 
    - run: docker push  shahdfares/multi-server 
    - run: docker push  shahdfares/multi-worker 
-   - run: docker push  shahdfares/multi-nginx 
 
 # Creating a deployment
-   - name: create deployment package
-     run: zip -r deploy.zip . -x '*.git*'
-
-     # 1. Prebuilt Action: Log in to Azure
-   - uses: azure/login@v2
+   - name: Azure-login
+     uses: angular/login@v2
      with:
-      client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id: ${{secrets.AZURE_CLIENT_ID}}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 2. Prebuilt Action: Deploy to App Service
-   - uses: azure/webapps-deploy@v3
+   - name: Set AKS context
+     uses: azure/aks-set-context@v4
      with:
-      app-name: 'my-azure-web-app'
-      package: '.'
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.CLUSTER_NAME }} 
+
+   - name: Create Postgres secret
+     run: |
+            kubectl create secret generic pgpassword \
+            --from-literal=PGPASSWORD='${{ secrets.PGPASSWORD }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+            
+   - name: Apply k8s files
+     run: kubectl apply -f k8s/
+
+   - name: Update images
+     run: |
+          kubectl set image deployment/client-deployment client=shahdfares/multi-client:${{ github.sha }}
+          kubectl set image deployment/server-deployment server=shahdfares/multi-server:${{ github.sha }}
+          kubectl set image deployment/worker-deployment worker=shahdfares/multi-worker:${{ github.sha }}
+
+   - name: Check rollout
+     run: |
+          kubectl rollout status deployment/postgres-deployment --timeout=180s
+          kubectl rollout status deployment/server-deployment --timeout=180s
+          kubectl rollout status deployment/client-deployment --timeout=180s          
