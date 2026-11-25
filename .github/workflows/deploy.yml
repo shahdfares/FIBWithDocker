@@ -25,9 +25,9 @@ jobs:
    - run:  docker build -t shahdfares/multi-server:latest -t shahdfares/multi-server:${{ github.sha }} -f ./server/Dockerfile ./server
    - run:  docker build -t shahdfares/multi-worker:latest -t shahdfares/multi-worker:${{ github.sha }} -f ./worker/Dockerfile ./worker
 
-   - run: docker push  shahdfares/multi-client 
-   - run: docker push  shahdfares/multi-server 
-   - run: docker push  shahdfares/multi-worker 
+   - run: docker push --all-tags shahdfares/multi-client
+   - run: docker push --all-tags shahdfares/multi-server
+   - run: docker push --all-tags shahdfares/multi-worker
 
 # Creating a deployment
    - name: Azure-login
