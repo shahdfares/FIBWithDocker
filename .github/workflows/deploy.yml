@@ -50,7 +50,7 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
    - name: Apply k8s files
-     run: kubectl apply -f k8s/
+     run: kubectl apply -f .github/workflows/k8s/
 
    - name: Update images
      run: |
